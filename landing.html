@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Bug Report Recorder: Record. Capture. Debug.</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🐞</text></svg>">
+<style>
+  :root {
+    --bg: #0b1220;
+    --panel: #111a2e;
+    --panel-border: #1f2b45;
+    --text: #e2e8f0;
+    --muted: #7c8aa5;
+    --accent: #e11d48;
+    --accent-2: #38bdf8;
+    box-sizing: border-box;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0b1220; --panel: #111a2e; --panel-border: #1f2b45;
+      --text: #e2e8f0; --muted: #7c8aa5; --accent: #e11d48; --accent-2: #38bdf8;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0b1220; --panel: #111a2e; --panel-border: #1f2b45;
+    --text: #e2e8f0; --muted: #7c8aa5; --accent: #e11d48; --accent-2: #38bdf8;
+  }
+  html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    line-height: 1.55;
+  }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 24px; }
+  a { color: inherit; }
+
+  /* ---- Nav ---- */
+  nav.wrap {
+    display: flex; align-items: center; justify-content: space-between;
+    padding-top: 28px; padding-bottom: 28px;
+  }
+  .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 17px; }
+  .brand .dot {
+    width: 12px; height: 12px; border-radius: 50%; background: var(--accent);
+    box-shadow: 0 0 0 4px rgba(225,29,72,0.15);
+  }
+  nav a.navlink { color: var(--muted); text-decoration: none; font-size: 14px; margin-left: 28px; }
+  nav a.navlink:hover { color: var(--text); }
+
+  /* ---- Hero ---- */
+  header.hero { padding: 40px 0 80px; }
+  .hero-grid { display: grid; grid-template-columns: 1.1fr 1fr; gap: 56px; align-items: center; }
+  @media (max-width: 860px) { .hero-grid { grid-template-columns: 1fr; } }
+
+  h1 {
+    font-size: clamp(34px, 5vw, 50px);
+    line-height: 1.12;
+    margin: 0 0 20px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+  }
+  .sub { color: var(--muted); font-size: 18px; max-width: 46ch; margin: 0 0 32px; }
+
+  .cta-row { display: flex; gap: 14px; flex-wrap: wrap; }
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center;
+    padding: 13px 22px; border-radius: 8px; font-size: 15px; font-weight: 600;
+    text-decoration: none; border: 1px solid transparent; cursor: pointer;
+  }
+  .btn-primary { background: var(--accent); color: white; }
+  .btn-primary:hover { background: #c81440; }
+  .btn-secondary { background: transparent; border-color: var(--panel-border); color: var(--text); }
+  .btn-secondary:hover { border-color: var(--accent-2); }
+
+  /* ---- Mock log panel (grounded in the actual product UI) ---- */
+  .log-panel {
+    background: var(--panel);
+    border: 1px solid var(--panel-border);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .log-panel .bar {
+    display: flex; gap: 6px; padding: 12px 14px; border-bottom: 1px solid var(--panel-border);
+  }
+  .log-panel .bar span { width: 10px; height: 10px; border-radius: 50%; background: #334155; }
+  .log-entry { padding: 13px 16px; border-bottom: 1px solid var(--panel-border); font-size: 13px; }
+  .log-entry:last-child { border-bottom: none; }
+  .log-entry .type { font-weight: 700; margin-bottom: 3px; }
+  .log-entry .type.err { color: #f87171; }
+  .log-entry .type.net { color: #fbbf24; }
+  .log-entry .msg {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 12px; color: var(--muted); word-break: break-word;
+  }
+  .log-entry .time { font-family: ui-monospace, monospace; font-size: 11px; color: #475569; margin-top: 4px; }
+
+  /* ---- Sections ---- */
+  section { padding: 64px 0; border-top: 1px solid var(--panel-border); }
+  h2 { font-size: 28px; margin: 0 0 12px; font-weight: 800; letter-spacing: -0.01em; }
+  .section-sub { color: var(--muted); font-size: 16px; margin: 0 0 40px; max-width: 56ch; }
+
+  .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px; }
+  @media (max-width: 780px) { .steps { grid-template-columns: 1fr; } }
+  .step .num {
+    font-size: 13px; font-weight: 700; color: var(--accent-2);
+    margin-bottom: 10px;
+  }
+  .step h3 { font-size: 17px; margin: 0 0 8px; }
+  .step p { color: var(--muted); font-size: 14.5px; margin: 0; }
+
+  .features { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+  @media (max-width: 780px) { .features { grid-template-columns: 1fr; } }
+  .feature { padding: 22px; border: 1px solid var(--panel-border); border-radius: 10px; }
+  .feature h3 { font-size: 16px; margin: 0 0 8px; }
+  .feature p { color: var(--muted); font-size: 14px; margin: 0; }
+
+  .pricing-card {
+    background: var(--panel); border: 1px solid var(--panel-border); border-radius: 12px;
+    padding: 36px; max-width: 420px;
+    display: flex; flex-direction: column; gap: 18px;
+  }
+  .price { font-size: 44px; font-weight: 800; }
+  .price span { font-size: 16px; color: var(--muted); font-weight: 500; }
+  .pricing-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 10px; }
+  .pricing-list li { color: var(--muted); font-size: 14.5px; padding-left: 22px; position: relative; }
+  .pricing-list li::before {
+    content: ""; position: absolute; left: 0; top: 7px;
+    width: 8px; height: 8px; border-radius: 50%; background: var(--accent-2);
+  }
+
+  footer { padding: 40px 0; border-top: 1px solid var(--panel-border); }
+  footer .wrap { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
+  footer, footer a { color: var(--muted); font-size: 13.5px; text-decoration: none; }
+  footer a:hover { color: var(--text); }
+</style>
+</head>
+<body>
+
+<nav class="wrap">
+  <div class="brand"><span class="dot"></span> Bug Report Recorder</div>
+  <div>
+    <a class="navlink" href="#how">How it works</a>
+    <a class="navlink" href="#pricing">Pricing</a>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="wrap hero-grid">
+    <div>
+      <h1>Stop writing<br>"it broke, here's a screenshot."</h1>
+      <p class="sub">Record the tab where a bug happens. Get the video, the console errors, and the failed requests, synced together in one file, automatically.</p>
+      <div class="cta-row">
+        <a class="btn btn-primary" href="#buy">Buy license: $19</a>
+        <a class="btn btn-secondary" href="#chrome-store">Add to Chrome</a>
+      </div>
+    </div>
+    <div class="log-panel">
+      <div class="bar"><span></span><span></span><span></span></div>
+      <div class="log-entry">
+        <div class="type err">console.error</div>
+        <div class="msg">Error fetching activity for drawer: An error occurred</div>
+        <div class="time">0:15</div>
+      </div>
+      <div class="log-entry">
+        <div class="type net">xhr-network-error</div>
+        <div class="msg">GET /api/v1/activity-ledger?user_id=c1861b… (no readable response)</div>
+        <div class="time">0:15</div>
+      </div>
+      <div class="log-entry">
+        <div class="type err">unhandled-rejection</div>
+        <div class="msg">TypeError: Failed to fetch</div>
+        <div class="time">0:20</div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<section id="how">
+  <div class="wrap">
+    <h2>How it works</h2>
+    <p class="section-sub">Three steps, no setup required.</p>
+    <div class="steps">
+      <div class="step">
+        <div class="num">01</div>
+        <h3>Hit record</h3>
+        <p>Click the extension icon on the tab where the bug happens, and reproduce it normally.</p>
+      </div>
+      <div class="step">
+        <div class="num">02</div>
+        <h3>It captures itself</h3>
+        <p>Console errors, uncaught exceptions, and failed network requests are captured automatically as you go, with sensitive fields redacted along the way.</p>
+      </div>
+      <div class="step">
+        <div class="num">03</div>
+        <h3>Export and share</h3>
+        <p>Stop recording. Get one .zip with the video, the logs, and a viewer page. Click any error to jump the video to that exact moment.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2>Built for actual debugging</h2>
+    <p class="section-sub">Not just a screen recorder.</p>
+    <div class="features">
+      <div class="feature">
+        <h3>Synced viewer</h3>
+        <p>Every captured error links to the exact video timestamp it happened at, so there's no scrubbing through a 3-minute clip.</p>
+      </div>
+      <div class="feature">
+        <h3>Automatic redaction</h3>
+        <p>Passwords, tokens, and auth headers are stripped from captured payloads before export, by default.</p>
+      </div>
+      <div class="feature">
+        <h3>Stays on your device</h3>
+        <p>Nothing is uploaded anywhere. The export is a plain file, and you decide who sees it.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="pricing">
+  <div class="wrap">
+    <h2>Pricing</h2>
+    <p class="section-sub">One payment. No subscription.</p>
+    <div class="pricing-card">
+      <div class="price">$19 <span>one-time</span></div>
+      <ul class="pricing-list">
+        <li>Full access, forever, including future updates</li>
+        <li>Use on up to 2 devices</li>
+        <li>No recurring charges</li>
+      </ul>
+      <a class="btn btn-primary" id="buy" href="#">Buy license</a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div>© 2026 Bug Report Recorder</div>
+    <div>
+      <a href="https://saim2001.github.io/bug-recorder-extension/privacy-policy.html">Privacy Policy</a>
+      &nbsp;·&nbsp;
+      <a href="mailto:saimrao2408@gmail.com">Support</a>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>
